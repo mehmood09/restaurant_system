@@ -1,0 +1,98 @@
+{% extends 'restaurant/base.html' %}
+
+{% block title %}Shopping Cart{% endblock %}
+
+{% block content %}
+<div class="container my-5">
+    <h2 class="mb-4">
+        <i class="fas fa-shopping-cart"></i> Shopping Cart
+    </h2>
+
+    {% if cart.items.all %}
+    <div class="row">
+        <div class="col-lg-8">
+            {% for item in cart.items.all %}
+            <div class="card mb-3">
+                <div class="card-body">
+                    <div class="row align-items-center">
+                        <div class="col-md-2">
+                            {% if item.menu_item.image %}
+                            <img src="{{ item.menu_item.image.url }}" class="img-fluid rounded" alt="{{ item.menu_item.name }}">
+                            {% else %}
+                            <div class="bg-secondary rounded d-flex align-items-center justify-content-center" style="height: 80px;">
+                                <i class="fas fa-utensils text-white"></i>
+                            </div>
+                            {% endif %}
+                        </div>
+                        <div class="col-md-4">
+                            <h5 class="mb-1">{{ item.menu_item.name }}</h5>
+                            <p class="text-muted mb-0">${{ item.menu_item.price }} each</p>
+                        </div>
+                        <div class="col-md-3">
+                            <form method="post" action="{% url 'update_cart' item.id %}" class="d-flex align-items-center">
+                                {% csrf_token %}
+                                <label class="me-2">Qty:</label>
+                                <input type="number" name="quantity" value="{{ item.quantity }}" min="1" class="form-control form-control-sm" style="width: 70px;">
+                                <button type="submit" class="btn btn-sm btn-outline-primary ms-2">
+                                    <i class="fas fa-sync-alt"></i>
+                                </button>
+                            </form>
+                        </div>
+                        <div class="col-md-2 text-end">
+                            <h5 class="text-primary mb-0">${{ item.subtotal }}</h5>
+                        </div>
+                        <div class="col-md-1 text-end">
+                            <form method="post" action="{% url 'remove_from_cart' item.id %}">
+                                {% csrf_token %}
+                                <button type="submit" class="btn btn-sm btn-danger">
+                                    <i class="fas fa-trash"></i>
+                                </button>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+
+        <div class="col-lg-4">
+            <div class="card">
+                <div class="card-header bg-primary text-white">
+                    <h5 class="mb-0">Order Summary</h5>
+                </div>
+                <div class="card-body">
+                    <div class="d-flex justify-content-between mb-2">
+                        <span>Subtotal:</span>
+                        <strong>${{ cart.total }}</strong>
+                    </div>
+                    <div class="d-flex justify-content-between mb-2">
+                        <span>Tax (10%):</span>
+                        <strong>${{ cart.total|floatformat:2 }}</strong>
+                    </div>
+                    <hr>
+                    <div class="d-flex justify-content-between mb-3">
+                        <strong>Total:</strong>
+                        <strong class="text-primary h5">${{ cart.total|floatformat:2 }}</strong>
+                    </div>
+                    <a href="{% url 'checkout' %}" class="btn btn-primary w-100 btn-lg">
+                        <i class="fas fa-check-circle"></i> Proceed to Checkout
+                    </a>
+                    <a href="{% url 'menu' %}" class="btn btn-outline-primary w-100 mt-2">
+                        <i class="fas fa-arrow-left"></i> Continue Shopping
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+    {% else %}
+    <div class="text-center py-5">
+        <i class="fas fa-shopping-cart fa-4x text-muted mb-3"></i>
+        <h4>Your cart is empty</h4>
+        <p class="text-muted mb-4">Add some delicious items from our menu</p>
+        <a href="{% url 'menu' %}" class="btn btn-primary">
+            <i class="fas fa-utensils"></i> Browse Menu
+        </a>
+    </div>
+    {% endif %}
+</div>
+{% endblock %}

@@ -1,0 +1,269 @@
+{% extends 'restaurant/base.html' %}
+
+{% block title %}Revenue Analytics{% endblock %}
+
+{% block extra_css %}
+<style>
+    .analytics-card {
+        border: none;
+        border-radius: 15px;
+        box-shadow: 0 5px 15px rgba(0,0,0,0.08);
+        transition: all 0.3s;
+        overflow: hidden;
+    }
+    
+    .analytics-card:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 10px 25px rgba(0,0,0,0.15);
+    }
+    
+    .analytics-icon {
+        width: 60px;
+        height: 60px;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 1.5rem;
+    }
+    
+    .revenue-card {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        color: white;
+    }
+    
+    .orders-card {
+        background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+        color: white;
+    }
+    
+    .pending-card {
+        background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
+        color: white;
+    }
+    
+    .stats-number {
+        font-size: 2.5rem;
+        font-weight: bold;
+        margin: 15px 0;
+    }
+    
+    .period-toggle {
+        background: white;
+        border-radius: 15px;
+        padding: 10px;
+        box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+    }
+    
+    .period-btn {
+        border: none;
+        background: transparent;
+        padding: 10px 25px;
+        border-radius: 10px;
+        transition: all 0.3s;
+        font-weight: 500;
+    }
+    
+    .period-btn.active {
+        background: var(--primary-color);
+        color: white;
+    }
+    
+    .revenue-display {
+        font-size: 3rem;
+        font-weight: bold;
+        color: var(--primary-color);
+        text-align: center;
+        padding: 40px 0;
+        animation: fadeIn 0.5s;
+    }
+    
+    @keyframes fadeIn {
+        from { opacity: 0; transform: scale(0.9); }
+        to { opacity: 1; transform: scale(1); }
+    }
+    
+    .chart-container {
+        background: white;
+        border-radius: 15px;
+        padding: 30px;
+        box-shadow: 0 5px 15px rgba(0,0,0,0.08);
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container my-5">
+    <h2 class="mb-4">
+        <i class="fas fa-chart-line"></i> Revenue Analytics
+    </h2>
+
+    <div class="row mb-4">
+        <div class="col-lg-4 mb-4">
+            <div class="analytics-card revenue-card p-4">
+                <div class="d-flex align-items-center">
+                    <div class="analytics-icon bg-white bg-opacity-25">
+                        <i class="fas fa-dollar-sign"></i>
+                    </div>
+                    <div class="ms-3">
+                        <h6 class="mb-1 opacity-75">Total Revenue</h6>
+                        <div class="stats-number">${{ total_revenue|floatformat:2 }}</div>
+                        <small class="opacity-75">All Time</small>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-lg-4 mb-4">
+            <div class="analytics-card orders-card p-4">
+                <div class="d-flex align-items-center">
+                    <div class="analytics-icon bg-white bg-opacity-25">
+                        <i class="fas fa-receipt"></i>
+                    </div>
+                    <div class="ms-3">
+                        <h6 class="mb-1 opacity-75">Total Orders</h6>
+                        <div class="stats-number">{{ total_orders }}</div>
+                        <small class="opacity-75">Completed</small>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-lg-4 mb-4">
+            <div class="analytics-card pending-card p-4">
+                <div class="d-flex align-items-center">
+                    <div class="analytics-icon bg-white bg-opacity-25">
+                        <i class="fas fa-clock"></i>
+                    </div>
+                    <div class="ms-3">
+                        <h6 class="mb-1 opacity-75">Processing Orders</h6>
+                        <div class="stats-number">{{ pending_orders }}</div>
+                        <small class="opacity-75">In Progress</small>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="row">
+        <div class="col-12">
+            <div class="chart-container">
+                <div class="d-flex justify-content-between align-items-center mb-4">
+                    <h4 class="mb-0">Revenue Overview</h4>
+                    <div class="period-toggle">
+                        <button class="period-btn active" data-period="daily" onclick="showRevenue('daily', {{ daily_revenue }})">
+                            Daily
+                        </button>
+                        <button class="period-btn" data-period="weekly" onclick="showRevenue('weekly', {{ weekly_revenue }})">
+                            Weekly
+                        </button>
+                        <button class="period-btn" data-period="monthly" onclick="showRevenue('monthly', {{ monthly_revenue }})">
+                            Monthly
+                        </button>
+                    </div>
+                </div>
+
+                <div id="revenue-display" class="revenue-display">
+                    ${{ daily_revenue|floatformat:2 }}
+                </div>
+
+                <div class="text-center text-muted">
+                    <p id="period-label">Today's Revenue</p>
+                </div>
+
+                <div class="row mt-4 pt-4" style="border-top: 1px solid #dee2e6;">
+                    <div class="col-md-4 text-center">
+                        <div class="mb-2">
+                            <i class="fas fa-calendar-day fa-2x text-primary"></i>
+                        </div>
+                        <h5>${{ daily_revenue|floatformat:2 }}</h5>
+                        <p class="text-muted mb-0">Today</p>
+                    </div>
+                    <div class="col-md-4 text-center">
+                        <div class="mb-2">
+                            <i class="fas fa-calendar-week fa-2x text-success"></i>
+                        </div>
+                        <h5>${{ weekly_revenue|floatformat:2 }}</h5>
+                        <p class="text-muted mb-0">Last 7 Days</p>
+                    </div>
+                    <div class="col-md-4 text-center">
+                        <div class="mb-2">
+                            <i class="fas fa-calendar-alt fa-2x text-info"></i>
+                        </div>
+                        <h5>${{ monthly_revenue|floatformat:2 }}</h5>
+                        <p class="text-muted mb-0">This Month</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="row mt-4">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-body">
+                    <h5 class="card-title mb-3">
+                        <i class="fas fa-info-circle"></i> Quick Stats
+                    </h5>
+                    <div class="row">
+                        <div class="col-md-6">
+                            <ul class="list-unstyled">
+                                <li class="mb-2">
+                                    <i class="fas fa-check-circle text-success"></i>
+                                    <strong>Average Order Value:</strong> 
+                                    {% if total_orders > 0 %}
+                                        ${{ monthly_revenue|floatformat:2 }}
+                                    {% else %}
+                                        $0.00
+                                    {% endif %}
+                                </li>
+                                <li class="mb-2">
+                                    <i class="fas fa-chart-line text-primary"></i>
+                                    <strong>Total Orders:</strong> {{ total_orders }}
+                                </li>
+                            </ul>
+                        </div>
+                        <div class="col-md-6">
+                            <ul class="list-unstyled">
+                                <li class="mb-2">
+                                    <i class="fas fa-clock text-warning"></i>
+                                    <strong>Pending:</strong> {{ pending_orders }}
+                                </li>
+                                <li class="mb-2">
+                                    <i class="fas fa-dollar-sign text-success"></i>
+                                    <strong>Total Revenue:</strong> ${{ monthly_revenue|floatformat:2 }}
+                                </li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+function showRevenue(period, amount) {
+    const buttons = document.querySelectorAll('.period-btn');
+    buttons.forEach(btn => btn.classList.remove('active'));
+    
+    const activeBtn = document.querySelector(`[data-period="${period}"]`);
+    activeBtn.classList.add('active');
+    
+    const display = document.getElementById('revenue-display');
+    display.style.animation = 'none';
+    setTimeout(() => {
+        display.style.animation = 'fadeIn 0.5s';
+        display.textContent = '$' + amount.toFixed(2);
+    }, 10);
+    
+    const label = document.getElementById('period-label');
+    const labels = {
+        'daily': "Today's Revenue",
+        'weekly': "Last 7 Days Revenue",
+        'monthly': "This Month's Revenue"
+    };
+    label.textContent = labels[period];
+}
+</script>
+{% endblock %}

@@ -1,0 +1,162 @@
+{% extends 'restaurant/base.html' %}
+
+{% block title %}Receipt - {{ order.token_number }}{% endblock %}
+
+{% block extra_css %}
+<style>
+    .receipt-container {
+        max-width: 600px;
+        margin: 50px auto;
+        background: white;
+        padding: 40px;
+        border-radius: 15px;
+        box-shadow: 0 10px 40px rgba(0,0,0,0.1);
+    }
+    
+    .receipt-header {
+        text-align: center;
+        border-bottom: 2px dashed #dee2e6;
+        padding-bottom: 20px;
+        margin-bottom: 30px;
+    }
+    
+    .token-number {
+        font-size: 3rem;
+        font-weight: bold;
+        color: var(--primary-color);
+        margin: 20px 0;
+    }
+    
+    .receipt-table {
+        width: 100%;
+        margin: 20px 0;
+    }
+    
+    .receipt-table td {
+        padding: 10px 0;
+    }
+    
+    .receipt-items {
+        border-top: 1px solid #dee2e6;
+        border-bottom: 1px solid #dee2e6;
+        margin: 20px 0;
+        padding: 20px 0;
+    }
+    
+    .receipt-total {
+        background: linear-gradient(135deg, var(--primary-color), var(--secondary-color));
+        color: white;
+        padding: 20px;
+        border-radius: 10px;
+        margin-top: 20px;
+    }
+    
+    @media print {
+        .no-print {
+            display: none !important;
+        }
+        
+        .receipt-container {
+            box-shadow: none;
+            padding: 20px;
+        }
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container">
+    <div class="receipt-container">
+        <div class="receipt-header">
+            <h2 class="mb-0">
+                <i class="fas fa-utensils"></i> Restaurant
+            </h2>
+            <p class="text-muted mb-0">Order Receipt</p>
+            <div class="token-number">{{ order.token_number }}</div>
+            <span class="badge 
+                {% if order.status == 'pending' %}bg-warning
+                {% elif order.status == 'preparing' %}bg-info
+                {% elif order.status == 'ready' %}bg-success
+                {% elif order.status == 'completed' %}bg-primary
+                {% else %}bg-danger{% endif %} fs-6">
+                {{ order.get_status_display }}
+            </span>
+        </div>
+
+        <table class="receipt-table">
+            <tr>
+                <td><strong>Customer:</strong></td>
+                <td class="text-end">{{ order.customer_name }}</td>
+            </tr>
+            <tr>
+                <td><strong>Phone:</strong></td>
+                <td class="text-end">{{ order.customer_phone }}</td>
+            </tr>
+            {% if order.customer_email %}
+            <tr>
+                <td><strong>Email:</strong></td>
+                <td class="text-end">{{ order.customer_email }}</td>
+            </tr>
+            {% endif %}
+            <tr>
+                <td><strong>Date:</strong></td>
+                <td class="text-end">{{ order.created_at|date:"M d, Y - g:i A" }}</td>
+            </tr>
+            <tr>
+                <td><strong>Payment Method:</strong></td>
+                <td class="text-end">{{ order.get_payment_method_display }}</td>
+            </tr>
+        </table>
+
+        {% if order.notes %}
+        <div class="alert alert-info">
+            <strong>Notes:</strong> {{ order.notes }}
+        </div>
+        {% endif %}
+
+        <div class="receipt-items">
+            <h5 class="mb-3">Order Items</h5>
+            <table class="w-100">
+                {% for item in order.items.all %}
+                <tr>
+                    <td>{{ item.quantity }}x</td>
+                    <td>{{ item.menu_item_name }}</td>
+                    <td class="text-end">${{ item.price }}</td>
+                    <td class="text-end"><strong>${{ item.subtotal }}</strong></td>
+                </tr>
+                {% endfor %}
+            </table>
+        </div>
+
+        <table class="receipt-table">
+            <tr>
+                <td><strong>Subtotal:</strong></td>
+                <td class="text-end">${{ order.subtotal }}</td>
+            </tr>
+            <tr>
+                <td><strong>Tax (10%):</strong></td>
+                <td class="text-end">${{ order.tax }}</td>
+            </tr>
+        </table>
+
+        <div class="receipt-total text-center">
+            <h4 class="mb-2">Total Amount</h4>
+            <h2 class="mb-0">${{ order.total }}</h2>
+        </div>
+
+        <div class="text-center mt-4 no-print">
+            <button onclick="window.print()" class="btn btn-primary me-2">
+                <i class="fas fa-print"></i> Print Receipt
+            </button>
+            <a href="{% url 'orders' %}" class="btn btn-outline-primary">
+                <i class="fas fa-arrow-left"></i> Back to Orders
+            </a>
+        </div>
+
+        <div class="text-center mt-4 pt-4" style="border-top: 2px dashed #dee2e6;">
+            <p class="text-muted mb-0">Thank you for your order!</p>
+            <p class="text-muted"><small>Please keep this receipt for your records</small></p>
+        </div>
+    </div>
+</div>
+{% endblock %}
