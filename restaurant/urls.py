@@ -6,7 +6,7 @@ urlpatterns = [
     path('', views.home, name='home'),
     path('register/', views.register_view, name='register'),
     path('login/', auth_views.LoginView.as_view(template_name='restaurant/registration/login.html'), name='login'),
-    path('logout/', auth_views.LogoutView.as_view(), name='logout'),
+    path('logout/', views.logout_view, name='logout'),
     path('menu/', views.menu_view, name='menu'),
     path('add-to-cart/<int:item_id>/', views.add_to_cart, name='add_to_cart'),
     path('cart/', views.cart_view, name='cart'),
@@ -29,4 +29,5 @@ urlpatterns = [
     path('manage/menu-items/edit/<int:item_id>/', views.menuitem_edit, name='menuitem_edit'),
     path('manage/menu-items/delete/<int:item_id>/', views.menuitem_delete, name='menuitem_delete'),
     path('manage/menu-items/toggle/<int:item_id>/', views.menuitem_toggle_availability, name='menuitem_toggle'),
+
 ]
